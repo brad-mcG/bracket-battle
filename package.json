@@ -1,0 +1,21 @@
+{
+  "name": "bracket-battle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bracket battle voting game for friends (Colyseus web app).",
+  "scripts": {
+    "build": "esbuild src/client.js --bundle --format=esm --platform=browser --outfile=public/bundle.js",
+    "watch": "esbuild src/client.js --bundle --format=esm --platform=browser --outfile=public/bundle.js --watch",
+    "start": "node server.js",
+    "test": "node test-bracket.js"
+  },
+  "dependencies": {
+    "@colyseus/sdk": "^0.17.43",
+    "@colyseus/ws-transport": "^0.17.13",
+    "@napi-rs/canvas": "^1.0.13",
+    "colyseus": "^0.17.10",
+    "esbuild": "^0.28.1",
+    "express": "^4.22.2"
+  }
+}

@@ -1,0 +1,26 @@
+[Unit]
+Description=Bracket Battle
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=brackets
+Group=brackets
+WorkingDirectory=/opt/bracket-battle
+# only Caddy (same container) talks to it; the app is never exposed directly
+Environment=HOST=127.0.0.1 PORT=3002 NODE_ENV=production
+ExecStart=/usr/local/bin/node server.js
+Restart=always
+RestartSec=3
+# a memory blow-up kills only the app (restarted above), never Caddy or the container.
+# Drawing a 128-entry result picture peaks around 150 MB on its own.
+MemoryMax=640M
+# the code is read-only to this user; it can only write its data folder
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/bracket-battle/data
+
+[Install]
+WantedBy=multi-user.target

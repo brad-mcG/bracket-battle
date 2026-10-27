@@ -1,0 +1,41 @@
+# Caddy in the web container (CT 120). Caddy strips /brackets before proxying, so the app
+# itself still lives at "/" on 127.0.0.1:3002; the client uses relative URLs to match.
+{
+	# admin API on a socket only caddy's own user can reach, not on localhost:2019
+	admin unix//var/lib/caddy/admin.sock
+}
+
+(brackets) {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options SAMEORIGIN
+		-Server
+	}
+	redir /brackets /brackets/ 308
+	handle_path /brackets/* {
+		request_body {
+			max_size 256KB
+		}
+		reverse_proxy 127.0.0.1:3002
+	}
+	# nothing else lives on this site yet
+	handle {
+		redir * /brackets/ 302
+	}
+}
+
+# LAN-only address, plain HTTP (no certificate possible for an IP). Handy from inside the
+# house if the router doesn't loop the public name back.
+http://192.168.4.250 {
+	import brackets
+}
+
+# Public site. Caddy fetches and renews the Let's Encrypt certificate itself and
+# redirects plain http to https. Needs router forwards 80 + 443 -> 192.168.4.250.
+# Changing the certificate authority needs `systemctl restart caddy`, not reload.
+ddns.themcglawns.net {
+	header Strict-Transport-Security "max-age=31536000"
+	import brackets
+}

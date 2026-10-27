@@ -1,0 +1,21 @@
+[OPTIONS]
+enable: 1
+policy_in: DROP
+policy_out: DROP
+
+[RULES]
+# Internet-facing web server (Caddy -> Bracket Battle). Only web traffic in.
+IN ACCEPT -p tcp -dport 80
+IN ACCEPT -p tcp -dport 443
+IN ACCEPT -p icmp
+# Public-facing, so it gets nothing on the home LAN (this comes before the accepts below).
+# Management is `pct exec` from the Proxmox host.
+OUT DROP -dest 192.168.4.0/24
+# Outbound only what it needs: web (ACME, apt, YouTube/Wikipedia lookups), DNS, NTP.
+# Everything else is dropped, including IPv6 link-local and the house's own forwarded ports.
+OUT ACCEPT -p tcp -dport 80
+OUT ACCEPT -p tcp -dport 443
+OUT ACCEPT -p udp -dport 53
+OUT ACCEPT -p tcp -dport 53
+OUT ACCEPT -p udp -dport 123
+OUT ACCEPT -p icmp
