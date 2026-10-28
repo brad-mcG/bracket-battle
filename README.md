@@ -27,7 +27,7 @@ accounts and no database.
 - **Stream it**: the host's **Stage** button opens a read-only page for an OBS browser source:
   title-only cards, the live vote bar, the countdown, the join code top right and the head count
   bottom right. When voting ends the winner winds up, knocks the loser off screen and slides to
-  the centre. No video and no buttons. Clips play on the host's and the viewers' own devices; the
+  the centre. No video and no buttons. Clips play on the host's and the viewers' own devices, each listener at their own volume; the
   host keeps the playing window out of the capture. Nobody ever sees who voted for what, only the
   totals. The host can start a 15, 30 or 60 second countdown once a clip has had its time; it
   ends voting by itself.

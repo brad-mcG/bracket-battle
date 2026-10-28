@@ -1,7 +1,7 @@
 // Live game: join the (bracket, host) room and render whatever state the server sends.
 // All rules live on the server; the host's buttons just send messages.
 import { Client } from "@colyseus/sdk";
-import { $, h, fill, go, openYouTube, api } from "./ui.js";
+import { $, h, fill, go, openYouTube, api, store } from "./ui.js";
 import { roundName } from "./bracket.js";
 
 let room = null, S = null, stage = false; // stage: the read-only view a streamer captures (no player, no buttons, the join link on screen)
@@ -20,6 +20,10 @@ const armed = (label, armedLabel, fn) => h("button", { onclick: (e) => {
 // controls and reports play/pause/seek to the room; viewers' players have no controls and
 // follow the state the server sends (nowPlaying.offset = where the host is right now).
 let yt = null, ytReady = false, ytApi = null, playing = null; // playing = { started, at, received, np }
+
+// each listener's own level, kept per browser: the clip plays on their device, so no volume the host sets could reach them
+const vol = () => { const v = Number(store.get("vol") ?? 100); return v >= 0 && v <= 100 ? v : 100; };
+const setVol = (v) => { store.set("vol", v); if (!ytReady) return; yt.setVolume(v); v ? yt.unMute() : yt.mute(); }; // 0 also mutes: phones ignore setVolume, not mute
 
 function loadYT() {
   ytApi ||= new Promise((resolve) => {
@@ -76,8 +80,8 @@ async function renderPlayer() {
   el.hidden = false;
   fill(el,
     h("div", { className: "vid" }, h("div", { id: "yt" }), !S.drives && h("div", { className: "shield", title: "The host controls playback" })),
-    !S.drives && h("div", { className: "row centered" },
-      h("button", { title: "Mute / unmute for me", onclick: (e) => { if (!ytReady) return; const m = yt.isMuted(); m ? yt.unMute() : yt.mute(); e.target.textContent = m ? "🔈" : "🔇"; } }, "🔈")));
+    !S.drives && h("div", { className: "row centered vol" }, "🔈",
+      h("input", { type: "range", min: 0, max: 100, value: vol(), title: "My volume", oninput: (e) => setVol(+e.target.value) })));
   const YT = await loadYT();
   if (!playing || playing.started !== np.started || playing.drives !== S.drives) return; // changed while the API loaded
   yt = new YT.Player("yt", {
@@ -86,7 +90,7 @@ async function renderPlayer() {
     playerVars: { autoplay: np.paused ? 0 : 1, start: Math.floor(hostPos()), controls: S.drives ? 1 : 0, disablekb: S.drives ? 0 : 1, rel: 0, playsinline: 1 },
     events: {
       // everyone lands where the host is (the driver too, after a reload) and gets the tap if autoplay was blocked
-      onReady: () => { ytReady = true; follow(); setTimeout(offerTap, 1500); },
+      onReady: () => { ytReady = true; if (!S.drives) setVol(vol()); follow(); setTimeout(offerTap, 1500); },
       onStateChange: (e) => {
         if (!S.drives) { // a follower: a local pause (background tab) gets the tap to catch up
           if (e.data === 1) el.querySelector(".tap")?.remove();
