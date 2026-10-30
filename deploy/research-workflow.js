@@ -37,7 +37,7 @@ CLIPS: "auto" = decide from the category with this table; otherwise as requested
 
 const WIKI = `
 WIKIPEDIA CHECK (curl in Bash, batches of up to 50 titles joined with "|", URL-encoded, with a User-Agent):
-  curl -s -A "BracketBattle/0.1 (https://ddns.themcglawns.net/brackets/)" "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages|pageprops&piprop=original&pilicense=any&ppprop=disambiguation&redirects=1&format=json&titles=<T1>|<T2>"
+  curl -s -A "BracketBattle/0.1 (https://github.com/brad-mcG/bracket-battle)" "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages|pageprops&piprop=original&pilicense=any&ppprop=disambiguation&redirects=1&format=json&titles=<T1>|<T2>"
 Use the resolved final title; "missing" = no such article; pageprops.disambiguation = use the specific article; hasImage = "original" present. Prefer the article whose image IS the thing (poster, cover, logo, the person). On HTTP 429 wait and retry. Never guess titles.`
 const CLIPS = `
 CLIP RULES: one YouTube video per entry of the bracket's clip type. Highlight reels (people, athletes, performers): career highlights/best moments, 3-5 minutes preferred, HARD CAP 8 minutes (480 s), minimum 2 minutes; for college athletes college footage only. Moments: the play/video itself, as short as it is. Scenes: a compilation, 1-4 minutes. Songs: the official audio/video. Trailers: official trailer. Openings: the show's opening. Commercials: the iconic ad. Gameplay: the fight/level, 2-5 minutes. Stand-up: one bit, 3-6 minutes. Official channels preferred; good fan uploads acceptable when nothing official fits. A requester's suggested clip is tried first and kept if it passes.

@@ -10,7 +10,7 @@ import { COVERS } from "./store.js";
 
 const C = { bg: "#16171d", panel: "#22242d", line: "#3d4152", text: "#eceef4", muted: "#9298a8", win: "#6fd38a", gold: "#f0c75e", a: "#f0a63c", b: "#5aa7f0" };
 const FONT = "'Segoe UI', 'DejaVu Sans', Arial, sans-serif";
-const UA = "BracketBattle/0.1 (https://ddns.themcglawns.net/brackets/)";
+const UA = "BracketBattle/0.1 (https://github.com/brad-mcG/bracket-battle)";
 
 // A pasted picture link makes the SERVER fetch it, so: public addresses only, no redirects,
 // a hard byte cap while streaming (fetch inflates gzip, so content-length alone is no cap),

@@ -1,6 +1,6 @@
 # Bracket Battle
 
-Live at **https://ddns.themcglawns.net/brackets/**
+Live for my friend group (link on request)
 
 A web app for settling "best Beatles song" with friends, one 1v1 vote at a time, while everyone
 sits in a Discord voice call or watches a stream. Existing bracket sites are built for one person
@@ -57,7 +57,7 @@ service's environment on the server).
 Importer notes: Wikipedia originals refuse scripts, so it uses the API thumbnail (and the page
 summary thumbnail for small originals), paces requests at ~2/s, and shrinks covers to 800px.
 Wikimedia rate-limits by User-Agent: without a contact URL you get 10 requests a minute, with one
-(`BracketBattle/0.1 (https://ddns.themcglawns.net/brackets/)`) 200, so every Wikipedia-facing
+(`BracketBattle/0.1 (https://github.com/brad-mcG/bracket-battle)`) 200, so every Wikipedia-facing
 script carries that User-Agent and runs at most three requests at a time.
 
 ## Run locally

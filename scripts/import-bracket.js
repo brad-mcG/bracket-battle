@@ -22,7 +22,7 @@ const [file, title, ownerName] = args;
 if (!file || !title || !ownerName) { console.error("usage: import-bracket.js <entries.json> <topic> <owner name> [--owner <id>] [--repair <bracketId>] [--base <url>]"); process.exit(1); }
 
 fs.mkdirSync(COVERS, { recursive: true });
-const UA = "BracketBattle/0.1 (https://ddns.themcglawns.net/brackets/)"; // a contact URL in the UA lifts Wikimedia's limit from 10 to 200 req/min
+const UA = "BracketBattle/0.1 (https://github.com/brad-mcG/bracket-battle)"; // a contact URL in the UA lifts Wikimedia's limit from 10 to 200 req/min
 const MAX_SIDE = 800;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
