@@ -7,7 +7,6 @@
 //   ?play=<id>&host=<user>  a live game (that host's saved run of that bracket)
 //   ?join                   the join box (the nav's Join opens it in place)
 //   ?join=<code>            the invite link: joins the open game with that four-letter code
-//   ?stage=<key>            the read-only stage view a streamer captures (same key as the invite link)
 import { $, h, fill, api, go, identify, joinBox } from "./ui.js";
 import { builder } from "./builder.js";
 import { requestForm } from "./request.js";
@@ -43,7 +42,6 @@ async function main() {
     if (joinLink) joinLink.onclick = (e) => { e.preventDefault(); joinBox(); }; // a box over the page, not a page
     if (![...q.keys()].length) return landing();
     if (q.has("join") && !q.get("join")) { await landing(); return joinBox(); }
-    if (q.has("stage")) { const code = q.get("stage").toUpperCase(); return play({ userId: "stage", name: "Stage", stage: true }, { code, roomId: (await api(`api/join/${encodeURIComponent(code)}`)).roomId, stage: true }); } // a capture: no name prompt
     const me = await identify();
     if (q.has("pick")) return go(`play=${q.get("pick")}&host=${me.userId}`);
     if (q.has("play")) await play(me, { bracketId: q.get("play"), hostId: q.get("host") });

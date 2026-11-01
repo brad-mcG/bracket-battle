@@ -194,8 +194,7 @@ export class GameRoom extends Room {
     if (openRuns.get(this.key) === this) openRuns.delete(this.key);
   }
 
-  onJoin(client, { userId, name, stage } = {}) {
-    if (stage) { client.userData = { stage: true }; this.sync(); return; } // a stream capture: watches the game, is not a player, cannot vote
+  onJoin(client, { userId, name } = {}) {
     const id = String(userId || client.sessionId).slice(0, 64);
     const me = { id, name: String(name || "guest").slice(0, 40) };
     this.players.set(client.sessionId, me);
@@ -240,7 +239,7 @@ export class GameRoom extends Room {
         drives: client.sessionId === this.driver, // this tab's player sets playback for the room
         joinKey: this.g.joinKey,
         hostHere: people.some((p) => p.id === hostId),
-        here: people.length, // heads in the room (a stage capture is not one); names never leave the server
+        here: people.length, // heads in the room; names never leave the server
         myVote: me && votes[me.id]?.side,
         tally: tally(this.g), // live: the cards fight in real time; totals are all anyone sees
         timer: timerEnds ? { left: Math.max(0, timerEnds - Date.now()), secs: timerSecs } : null, // the host's countdown

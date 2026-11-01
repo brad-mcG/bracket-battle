@@ -145,18 +145,6 @@ dan.onMessage("state", () => {});
 await until(() => rooms[0].S.here === 4, "joined by room id");
 dan.leave();
 await until(() => rooms[0].S.here === 3, "dan left");
-// a stage client (a streamer's capture) sees the game but is not a player and cannot vote
-let stS = null;
-const st = await new Client(`ws://${base}`).joinById(joinInfo.roomId, { stage: true });
-st.onMessage("state", (s) => { stS = { ...stS, ...s }; });
-await until(() => stS && stS.title === "test 37", "stage gets state");
-assert.equal(rooms[0].S.here, 3, "stage is not a player");
-assert.equal(stS.isHost, false, "stage is not the host"); assert.equal(stS.drives, false, "stage does not drive playback");
-const tallyBefore = rooms[0].S.tally.a + rooms[0].S.tally.b;
-st.send("vote", { side: "a" });
-await sleep(400);
-assert.equal(rooms[0].S.tally.a + rooms[0].S.tally.b, tallyBefore, "stage votes are ignored");
-st.leave();
 // a second room on the same run is refused ("create" is not exposed; joinOrCreate reuses)
 await assert.rejects(new Client(`ws://${base}`).create("game", { userId: host, name: "x", bracketId: odd.id, hostId: host }), "create refused");
 const pairs = (S) => JSON.stringify(S.rounds[0].map((m) => [m.a, m.b]));

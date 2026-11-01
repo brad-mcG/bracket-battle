@@ -182,48 +182,28 @@ button.chip.who::before { content: ""; width: 8px; height: 8px; border-radius: 5
 button.chip.who::after { content: "✎"; color: var(--muted); font-size: 12px; }
 button.chip.who:hover { filter: none; border-color: var(--muted); }
 body.playing nav.top { display: none; } /* in a game the page is the game: no Browse / Request links */
-/* the stage: what a streamer captures. No nav, no toolbar, no player; the join link is the one line of text added */
-body.stage header, body.stage #bar, body.stage #player { display: none; }
-body.stage h1 { font-size: 44px; margin-bottom: 2px; }
-/* the stage's corner: the join code in big type, where to type it, the head count */
-body.stage { overflow: hidden; } /* a capture, not a page: nothing scrolls, and the knocked-out card leaves without a scrollbar */
-body.stage #bracket { display: none; }
-body.stage .joinbox { position: absolute; top: 14px; right: 30px; }
-body.stage .joinbox .code { font-size: 60px; font-weight: 800; letter-spacing: .14em; line-height: 1.05; }
-body.stage .count { position: fixed; right: 30px; bottom: 22px; display: inline-flex; align-items: center; gap: 12px; font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
-body.stage .count .fig { display: inline-flex; color: var(--muted); }
-body.stage .count .fig svg { width: 32px; height: 32px; }
-/* the hit, stage only: the winner winds up away from the loser, lunges, and the loser is knocked off screen */
+/* the hit, on every screen once voting ends: the winner winds up away from the loser, lunges, and the loser is knocked off screen */
+body.playing { overflow-x: hidden; } /* the knocked-out card leaves without a scrollbar (#bracket scrolls on its own). ponytail: iOS may still pan sideways for the 0.8 s it takes */
 .card.a { --dir: 1; } .card.b { --dir: -1; }
-body.stage .card.win { animation: windup 1.9s cubic-bezier(.3, .7, .2, 1) forwards; z-index: 2; }
-body.stage .card.lose { animation: knocked .8s cubic-bezier(.5, 0, 1, 1) .5s forwards; }
-body.stage .card.win-done { transform: translateX(calc(var(--dir) * (50vw - 50% - 32px))) scale(1.03) !important; z-index: 2; } /* parked in the centre of the frame */
-body.stage .card.lose-done { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9) !important; opacity: 0; }
+.card { --to: calc(var(--dir) * (50% + 40px)); } /* where the winner parks: the matchup's centre, half a card plus the gap and half the VS over */
+.card.win { animation: windup 1.9s cubic-bezier(.3, .7, .2, 1) forwards; z-index: 2; }
+.card.lose { animation: knocked .8s cubic-bezier(.5, 0, 1, 1) .5s forwards; }
+.card.win-done { transform: translateX(var(--to)) scale(1.03) !important; z-index: 2; } /* parked in the centre */
+.card.lose-done { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9) !important; opacity: 0; }
 @keyframes windup {
   0% { transform: scale(1.03); }
   22% { transform: translateX(calc(var(--dir) * -80px)) rotate(calc(var(--dir) * -4deg)) scale(1.03); }
   32% { transform: translateX(calc(var(--dir) * 100px)) rotate(calc(var(--dir) * 2deg)) scale(1.07); }
   40% { transform: translateX(calc(var(--dir) * 40px)) scale(1.03); }
   62% { transform: translateX(calc(var(--dir) * 40px)) scale(1.03); }
-  100% { transform: translateX(calc(var(--dir) * (50vw - 50% - 32px))) scale(1.03); } /* the loser is gone: take the centre */
+  100% { transform: translateX(var(--to)) scale(1.03); } /* the loser is gone: take the centre */
 }
+@keyframes shut { from { max-height: 120vh; } to { max-height: 0; padding-block: 0; border-width: 0; margin: 0; opacity: 0; overflow: hidden; } } /* a stacked loser's slot closing; the card itself is already off screen, so only the slot's height shows */
 @keyframes knocked {
   0% { transform: scale(.96); opacity: 1; }
   12% { transform: translateX(calc(var(--dir) * -40px)) rotate(calc(var(--dir) * -5deg)) scale(.96); }
   100% { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9); opacity: 0; }
 }
-/* the stage at stream scale: the whole frame, pictures that fill, big names, no case, a big countdown */
-body.stage > main#app { max-width: none; padding-inline: 32px; }
-body.stage .matchup { margin-top: 44px; gap: 40px; }
-body.stage .card { padding: 16px; }
-body.stage .card .cover { max-height: none; height: 52vh; object-fit: cover; object-position: 50% 22%; }
-body.stage .card .name { font-size: 30px; font-weight: 700; text-align: center; margin-top: 6px; }
-body.stage .card .stats { font-size: 16px; text-align: center; margin-top: 0; }
-body.stage .card .stamp { width: 72px; height: 72px; font-size: 44px; top: 14px; right: 14px; }
-body.stage .clock { height: 44px; max-width: 760px; border-radius: 22px; }
-body.stage .clock span { font-size: 28px; line-height: 42px; }
-body.stage .tug { max-width: 1100px; }
-body.stage .tug .n { font-size: 40px; }
 /* the join box: four letters over whatever page is showing */
 .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(0, 0, 0, .6); }
 .modal .namebox { margin: 0; width: min(440px, calc(100vw - 32px)); text-align: center; }
@@ -249,7 +229,7 @@ button.tiny { padding: 1px 8px; font-size: 11px; line-height: 1.5; border-radius
 ol.edit-list li.entry { flex-wrap: wrap; }
 ol.edit-list li.entry textarea, ol.edit-list li.entry input.stats { flex: 1 1 100%; margin-left: 2.5em; font-size: 13px; }
 .card { position: relative; transition: transform .5s cubic-bezier(.2, .8, .2, 1), box-shadow .5s; transform-origin: center; }
-/* the tie coin: a 3D flip that lands on the call's answer; big on the stage */
+/* the tie coin: a 3D flip that lands on the call's answer */
 .coin-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 4px 0 10px; perspective: 900px; }
 .coin { position: relative; width: 110px; height: 110px; transform-style: preserve-3d; }
 .coin .face { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; font-size: 46px; font-weight: 800; backface-visibility: hidden;
@@ -261,9 +241,6 @@ ol.edit-list li.entry textarea, ol.edit-list li.entry input.stats { flex: 1 1 10
 @keyframes flipH { from { transform: rotateY(0) translateY(0); } 50% { transform: rotateY(900deg) translateY(-70px); } to { transform: rotateY(1800deg) translateY(0); } }
 @keyframes flipT { from { transform: rotateY(0) translateY(0); } 50% { transform: rotateY(990deg) translateY(-70px); } to { transform: rotateY(1980deg) translateY(0); } }
 .coin-text { font-weight: 700; } .coin-call { text-align: center; margin: 6px 0; }
-body.stage .coin-wrap { flex-direction: row; justify-content: center; gap: 28px; margin: 0; } /* beside its text: the frame is 1080 tall */
-body.stage .coin { width: 150px; height: 150px; } body.stage .coin .face { font-size: 64px; }
-body.stage .coin-text, body.stage .coin-call { font-size: 28px; }
 /* the winner's beat: once voting ends, a check on the card that advances */
 .card .stamp { position: absolute; top: 10px; right: 10px; width: 48px; height: 48px; border-radius: 50%; background: var(--win); color: #10140f; font-size: 30px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 6px 24px -6px #000; animation: pop .35s cubic-bezier(.2, .8, .2, 1); }
 @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -314,4 +291,9 @@ canvas.ribbons { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
 
 @media (max-width: 560px) {
   .matchup { grid-template-columns: 1fr; }
+  /* the cards are stacked: the winner stays put; once the loser has been knocked off, its slot and the VS shut (the two row gaps stay) */
+  .card { --to: 0px; }
+  .card.lose { animation: knocked .8s cubic-bezier(.5, 0, 1, 1) .5s forwards, shut .6s ease-in 1.3s forwards; }
+  .matchup:has(.card.lose) .vs { animation: shut .6s ease-in 1.3s forwards; }
+  .card.lose-done, .matchup:has(.card.lose-done) .vs { display: none; }
 }

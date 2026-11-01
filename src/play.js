@@ -4,7 +4,7 @@ import { Client } from "@colyseus/sdk";
 import { $, h, fill, go, openYouTube, api, store } from "./ui.js";
 import { roundName } from "./bracket.js";
 
-let room = null, S = null, stage = false; // stage: the read-only view a streamer captures (no player, no buttons, the join link on screen)
+let room = null, S = null;
 const send = (type, msg) => room.send(type, msg);
 
 // article title -> URL; keeps "#Section" anchors and "/" (list articles use them), encodes the rest
@@ -59,7 +59,6 @@ function offerTap() {
 
 async function renderPlayer() {
   const np = S && S.nowPlaying;
-  if (stage) return; // the stage never shows video: the room hears it in their own browsers, the stream stays clean
   const el = $("player");
   if (!np) {
     if (yt) yt.destroy();
@@ -114,23 +113,23 @@ function entryCard(side, idx) {
   // voting over and this side took it (a tie: once the coin has landed, the coin's winner)
   const won = S.coin ? coinDone() && S.coin.winner === side : !!t && t.a !== t.b && (t.a > t.b ? "a" : "b") === side;
   const lost = S.coin ? coinDone() && S.coin.winner !== side : !!t && t.a !== t.b && !won;
-  // the stage's hit plays once per match; later state updates re-render the cards in their end position
+  // the hit plays once per match on every screen; later state updates re-render the cards in their end position
   const hitKey = `${S.current.r}-${S.current.m}`, fresh = hitShown !== hitKey;
-  const hit = stage && (won || lost) ? (won ? (fresh ? " win" : " win-done") : (fresh ? " lose" : " lose-done")) : "";
+  const hit = won || lost ? (won ? (fresh ? " win" : " win-done") : (fresh ? " lose" : " lose-done")) : "";
   // the cards fight: the leader grows and glows, the trailer shrinks, as the votes come in
   return h("div", { className: `card ${side}${mine ? " mine" : ""}${s > 0.5 ? " lead" : ""}${hit}`, style: `transform: scale(${(0.96 + 0.07 * s).toFixed(3)})` }, // the leader grows 3% at most: enough to read, never onto its neighbours
     e.img && h("img", { className: "cover", src: e.img, alt: "", referrerPolicy: "no-referrer" }),
     won && h("div", { className: "stamp", title: "Advances" }, "✓"), // the winner's beat, until the host moves on
     h("div", { className: "name" }, e.name),
-    !stage && e.stats && h("div", { className: "stats" }, e.stats), // the stage is a scoreboard: title only
-    !stage && e.case && h("p", { className: "case" }, e.case), // the stage keeps picture and name big; the case is on the voters' screens
+    e.stats && h("div", { className: "stats" }, e.stats),
+    e.case && h("p", { className: "case" }, e.case),
     // the links and the vote sit at the foot of the card, level across both cards
     h("div", { className: "foot" },
-      !stage && (e.yt || e.wiki) && h("div", { className: "row" },
+      (e.yt || e.wiki) && h("div", { className: "row" },
         e.yt && S.isHost && h("button", { title: "Plays for everyone in the room", onclick: () => send("play", { yt: e.yt }) }, "▶ Play"),
         e.yt && h("button", { onclick: () => openYouTube(e.yt) }, "YouTube ↗"),
         e.wiki && h("button", { className: "wiki", onclick: () => window.open(wikiUrl(e.wiki), "_blank") }, "Wikipedia ↗")),
-      !S.revealed && !stage && h("button", { className: mine ? "primary" : "", onclick: () => !mine && send("vote", { side }) }, mine ? "Your pick ✓" : "Vote")));
+      !S.revealed && h("button", { className: mine ? "primary" : "", onclick: () => !mine && send("vote", { side }) }, mine ? "Your pick ✓" : "Vote")));
 }
 
 // the tie coin: the caller gets the two buttons, everyone else waits; then the flip plays once and the result holds
@@ -143,13 +142,12 @@ function coinView(mt) {
   const key = `${S.current.r}-${S.current.m}`, animate = coinFlipped !== key;
   if (animate) { coinFlipped = key; setTimeout(() => { coinLanded = key; render(); }, 2400); } // the cards react once it lands
   return h("div", { className: "coin-wrap" },
-    // the coin itself spins on the stage only: one animation on the stream, not one per phone; the others get the line
-    stage && h("div", { className: `coin ${animate ? "flip-" : "show-"}${c.result}` }, h("div", { className: "face heads" }, "H"), h("div", { className: "face tails" }, "T")),
+    h("div", { className: `coin ${animate ? "flip-" : "show-"}${c.result}` }, h("div", { className: "face heads" }, "H"), h("div", { className: "face tails" }, "T")),
     h("div", { className: "coin-text" }, coinDone() ? `${c.result[0].toUpperCase() + c.result.slice(1)}: ${S.entries[mt[c.winner]].name} advances` : `Called ${c.call}…`));
 }
 
 // the countdown the host starts: a bar draining left to right with the time on it, the same for everyone
-let hitShown = null; // "r-m" of the match whose hit the stage has already played
+let hitShown = null; // "r-m" of the match whose hit has already played
 let coinFlipped = null, coinLanded = null; // "r-m" of the coin already spun, and of the one that has landed
 const coinDone = () => !!S.coin && coinLanded === `${S.current.r}-${S.current.m}`;
 let clockTick = null;
@@ -187,7 +185,6 @@ function viewVoting() {
   return [
     // no round label: the bar tells that story, and the bracket itself is a scroll away
     h("div", { className: "progress", title: `${roundName(S.rounds, r)} · match ${m + 1} of ${S.rounds[r].length} · ${played} of ${total} played` }, h("div", { style: `width:${(100 * played) / total}%` })),
-    stage && S.nowPlaying && h("div", { className: "round" }, "♪ " + (S.entries.find((e) => e.yt === S.nowPlaying.yt)?.name || "playing")), // the stream sees what the room hears
     h("div", { className: "matchup" }, entryCard("a", mt.a), h("div", { className: "vs" }, "VS"), entryCard("b", mt.b)),
     tug(),
     t && tie && S.coin && coinView(mt),
@@ -218,7 +215,7 @@ function viewDone() {
       h("div", { className: "name" }, "🏆 " + champ.name)),
     pic && [
       h("a", { href: pic, target: "_blank" }, h("img", { className: "result", src: pic, alt: "the full bracket as a picture" })),
-      !stage && h("div", { className: "row centered" }, copyButton("Copy picture link", pic)),
+      h("div", { className: "row centered" }, copyButton("Copy picture link", pic)),
     ],
   ];
 }
@@ -283,8 +280,8 @@ function render() {
   document.body.classList.add("playing");
   if (S.phase === "done" && lastPhase === "voting") ribbons(); // the moment the champion is decided, for everyone in the room
   lastPhase = S.phase;
-  $("title").textContent = stage ? S.title : ""; // on the stage the name is the headline; in a game it sits in the toolbar's centre
-  fill($("bar"), ...(stage ? [] : [
+  $("title").textContent = ""; // in a game the name sits in the toolbar's centre
+  fill($("bar"),
     // players see the title alone: the brand link in the header is their way out
     h("div", { className: "left" }, S.isHost && h("button", { onclick: () => go("") }, "← Brackets"),
       S.isHost && armed("Start over", "Click again: reshuffle and wipe this run", () => send("restart"))),
@@ -292,20 +289,14 @@ function render() {
     h("div", { className: "right" },
       // who is here, as a figure and a number; then the join code itself, which copies the invite link when clicked
       S.isHost && h("span", { className: "chip people", title: `${S.here} in the room` }, person(), String(S.here) + (S.hostHere ? "" : " · host away")),
-      S.isHost && copyButton(S.joinKey, new URL(`?join=${S.joinKey}`, location.href).href, "The join code: say it, or click to copy the invite link", "code"),
-      S.isHost && h("button", { title: "Opens the stage in a new tab: the page to capture for a stream, with the match, the live vote and the join code", onclick: () => window.open(new URL(`?stage=${S.joinKey}`, location.href).href, "_blank") }, "Stage"))]));
-  // the stage: the join code alone top-right, the head count big bottom-right, no bracket tree (it is a scoreboard)
-  const corner = stage && h("div", { className: "joinbox" }, h("div", { className: "code" }, S.joinKey));
-  const count = stage && h("div", { className: "count", title: `${S.here} in the room` }, person(), String(S.here));
-  fill($("app"), corner, count, ...(S.phase === "voting" ? viewVoting() : viewDone()));
-  fill($("bracket"), ...(stage ? [] : viewBracket()));
-  if (stage && S.phase === "voting" && S.revealed && (S.tally.a !== S.tally.b || coinDone())) hitShown = `${S.current.r}-${S.current.m}`; // played now; hold it from here on
+      S.isHost && copyButton(S.joinKey, new URL(`?join=${S.joinKey}`, location.href).href, "The join code: say it, or click to copy the invite link", "code")));
+  fill($("app"), ...(S.phase === "voting" ? viewVoting() : viewDone()));
+  fill($("bracket"), ...viewBracket());
+  if (S.phase === "voting" && S.revealed && (S.tally.a !== S.tally.b || coinDone())) hitShown = `${S.current.r}-${S.current.m}`; // played now; hold it from here on
   renderPlayer();
 }
 
-export async function play(me, { bracketId, hostId, roomId, code, stage: asStage = false }) {
-  stage = asStage;
-  if (stage) document.body.classList.add("stage");
+export async function play(me, { bracketId, hostId, roomId, code }) {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   // keep the page's folder (e.g. /brackets) so this works behind a path-prefix proxy
   const base = location.pathname.replace(/\/[^/]*$/, "");
