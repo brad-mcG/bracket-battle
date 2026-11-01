@@ -114,7 +114,7 @@ function entryCard(side, idx) {
   const won = S.coin ? coinDone() && S.coin.winner === side : !!t && t.a !== t.b && (t.a > t.b ? "a" : "b") === side;
   const lost = S.coin ? coinDone() && S.coin.winner !== side : !!t && t.a !== t.b && !won;
   // the hit plays once per match on every screen; later state updates re-render the cards in their end position
-  const hitKey = `${S.current.r}-${S.current.m}`, fresh = hitShown !== hitKey;
+  const hitKey = matchKey(), fresh = hitShown !== hitKey;
   const hit = won || lost ? (won ? (fresh ? " win" : " win-done") : (fresh ? " lose" : " lose-done")) : "";
   // the cards fight: the leader grows and glows, the trailer shrinks, as the votes come in
   return h("div", { className: `card ${side}${mine ? " mine" : ""}${s > 0.5 ? " lead" : ""}${hit}`, style: `transform: scale(${(0.96 + 0.07 * s).toFixed(3)})` }, // the leader grows 3% at most: enough to read, never onto its neighbours
@@ -139,7 +139,7 @@ function coinView(mt) {
     ? h("div", { className: "coin-call" }, h("div", { className: "muted" }, `Tie. Call it for ${S.entries[mt[c.side]].name}:`),
         h("div", { className: "row centered" }, h("button", { className: "primary", onclick: () => send("call", { call: "heads" }) }, "Heads"), h("button", { className: "primary", onclick: () => send("call", { call: "tails" }) }, "Tails")))
     : h("div", { className: "coin-call muted" }, "Tie. A player is calling the coin…");
-  const key = `${S.current.r}-${S.current.m}`, animate = coinFlipped !== key;
+  const key = matchKey(), animate = coinFlipped !== key;
   if (animate) { coinFlipped = key; setTimeout(() => { coinLanded = key; render(); }, 2400); } // the cards react once it lands
   return h("div", { className: "coin-wrap" },
     h("div", { className: `coin ${animate ? "flip-" : "show-"}${c.result}` }, h("div", { className: "face heads" }, "H"), h("div", { className: "face tails" }, "T")),
@@ -147,9 +147,11 @@ function coinView(mt) {
 }
 
 // the countdown the host starts: a bar draining left to right with the time on it, the same for everyone
-let hitShown = null; // "r-m" of the match whose hit has already played
-let coinFlipped = null, coinLanded = null; // "r-m" of the coin already spun, and of the one that has landed
-const coinDone = () => !!S.coin && coinLanded === `${S.current.r}-${S.current.m}`;
+// this match in this run: Start over begins a new run without a page load, and its matches must not borrow the old run's hit or coin
+const matchKey = () => `${S.startedAt}-${S.current.r}-${S.current.m}`;
+let hitShown = null; // matchKey() of the match whose hit has already played
+let coinFlipped = null, coinLanded = null; // matchKey() of the coin already spun, and of the one that has landed
+const coinDone = () => !!S.coin && coinLanded === matchKey();
 let clockTick = null;
 function clock() {
   clearInterval(clockTick);
@@ -280,7 +282,6 @@ function render() {
   document.body.classList.add("playing");
   if (S.phase === "done" && lastPhase === "voting") ribbons(); // the moment the champion is decided, for everyone in the room
   lastPhase = S.phase;
-  $("title").textContent = ""; // in a game the name sits in the toolbar's centre
   fill($("bar"),
     // players see the title alone: the brand link in the header is their way out
     h("div", { className: "left" }, S.isHost && h("button", { onclick: () => go("") }, "← Brackets"),
@@ -292,7 +293,7 @@ function render() {
       S.isHost && copyButton(S.joinKey, new URL(`?join=${S.joinKey}`, location.href).href, "The join code: say it, or click to copy the invite link", "code")));
   fill($("app"), ...(S.phase === "voting" ? viewVoting() : viewDone()));
   fill($("bracket"), ...viewBracket());
-  if (S.phase === "voting" && S.revealed && (S.tally.a !== S.tally.b || coinDone())) hitShown = `${S.current.r}-${S.current.m}`; // played now; hold it from here on
+  if (S.phase === "voting" && S.revealed && (S.tally.a !== S.tally.b || coinDone())) hitShown = matchKey(); // played now; hold it from here on
   renderPlayer();
 }
 

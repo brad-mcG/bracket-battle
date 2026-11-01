@@ -169,7 +169,6 @@ ol.edit-list input + input + input { flex: 2 1 0; }
 .reqform #dup:empty { display: none; }
 select { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
 
-.round { text-align: center; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
 .progress { height: 4px; max-width: 560px; margin: 6px auto 0; background: var(--line); border-radius: 2px; overflow: hidden; }
 .progress div { height: 100%; background: var(--win); transition: width .3s; }
 /* the room: one chip naming the host, who wears the crown */
@@ -183,13 +182,13 @@ button.chip.who::after { content: "✎"; color: var(--muted); font-size: 12px; }
 button.chip.who:hover { filter: none; border-color: var(--muted); }
 body.playing nav.top { display: none; } /* in a game the page is the game: no Browse / Request links */
 /* the hit, on every screen once voting ends: the winner winds up away from the loser, lunges, and the loser is knocked off screen */
-body.playing { overflow-x: hidden; } /* the knocked-out card leaves without a scrollbar (#bracket scrolls on its own). ponytail: iOS may still pan sideways for the 0.8 s it takes */
+html:has(body.playing) { overflow-x: hidden; } /* the viewport, not body (body would become its own scroll container): the knocked-out card leaves without a scrollbar or a sideways pan; #bracket scrolls on its own */
 .card.a { --dir: 1; } .card.b { --dir: -1; }
 .card { --to: calc(var(--dir) * (50% + 40px)); } /* where the winner parks: the matchup's centre, half a card plus the gap and half the VS over */
 .card.win { animation: windup 1.9s cubic-bezier(.3, .7, .2, 1) forwards; z-index: 2; }
 .card.lose { animation: knocked .8s cubic-bezier(.5, 0, 1, 1) .5s forwards; }
 .card.win-done { transform: translateX(var(--to)) scale(1.03) !important; z-index: 2; } /* parked in the centre */
-.card.lose-done { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9) !important; opacity: 0; }
+.card.lose-done { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9) !important; opacity: 0; visibility: hidden; }
 @keyframes windup {
   0% { transform: scale(1.03); }
   22% { transform: translateX(calc(var(--dir) * -80px)) rotate(calc(var(--dir) * -4deg)) scale(1.03); }
@@ -202,7 +201,7 @@ body.playing { overflow-x: hidden; } /* the knocked-out card leaves without a sc
 @keyframes knocked {
   0% { transform: scale(.96); opacity: 1; }
   12% { transform: translateX(calc(var(--dir) * -40px)) rotate(calc(var(--dir) * -5deg)) scale(.96); }
-  100% { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9); opacity: 0; }
+  100% { transform: translateX(calc(var(--dir) * -120vw)) rotate(calc(var(--dir) * -22deg)) scale(.9); opacity: 0; visibility: hidden; } /* hidden at the end: nothing left to Tab or find into off screen */
 }
 /* the join box: four letters over whatever page is showing */
 .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(0, 0, 0, .6); }
@@ -291,9 +290,12 @@ canvas.ribbons { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
 
 @media (max-width: 560px) {
   .matchup { grid-template-columns: 1fr; }
-  /* the cards are stacked: the winner stays put; once the loser has been knocked off, its slot and the VS shut (the two row gaps stay) */
+  /* the cards are stacked: the winner stays put; once the loser has been knocked off, its slot and the VS shut. The -done rules
+     hold the same end state (not display: none), so a later re-render keeps the two row gaps and nothing jumps; one rule each, so a
+     browser without :has() still drops only the VS line */
   .card { --to: 0px; }
   .card.lose { animation: knocked .8s cubic-bezier(.5, 0, 1, 1) .5s forwards, shut .6s ease-in 1.3s forwards; }
   .matchup:has(.card.lose) .vs { animation: shut .6s ease-in 1.3s forwards; }
-  .card.lose-done, .matchup:has(.card.lose-done) .vs { display: none; }
+  .card.lose-done { max-height: 0; padding-block: 0; border-width: 0; margin: 0; overflow: hidden; }
+  .matchup:has(.card.lose-done) .vs { max-height: 0; opacity: 0; overflow: hidden; }
 }
