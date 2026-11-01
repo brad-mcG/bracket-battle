@@ -3,11 +3,14 @@
 import { h, api } from "./ui.js";
 
 // categories, read off the titles (a bracket lands in the first shelf that matches)
+// the season, by month index: the hero's seasonal slide and, while the month has one, the first shelf
+const SEASON = { 9: ["Halloween", /halloween|horror|monster|witch|vampire|ghost|slasher|spooky/i], 10: ["Thanksgiving", /thanksgiving|\bpie\b|fall flavor|leftover|football rivalry|song about food|celebrity chef/i], 11: ["Christmas", /christmas|holiday/i] };
+const season = SEASON[new Date().getMonth()];
 export const SHELVES = [
-  ["Halloween", /halloween|horror|monster|witch|vampire|ghost|slasher|spooky/i], // seasonal: first shelf while it has brackets
+  ...(season ? [season] : []),
   ["Sports", /nfl|nba|ufc|boxer|wrestler|heisman|football|dunk|super bowl|fighter|quarterback|running back/i],
   ["Music", /song|album|rapper|guitar|drummer|bass player|band|soundtrack|one-hit|taylor swift/i],
-  ["Food & drink", /food|bbq|pizza|pasta|cuisine|soda|takeout|fruit|vegetable|thanksgiving|candy|cereal|dish/i],
+  ["Food & drink", /food|bbq|pizza|pasta|cuisine|soda|takeout|fruit|vegetable|thanksgiving|candy|cereal|dish|pie|flavor|chef|leftover/i],
   ["Games", /game|console|shooter|franchise|grand theft|pok[eé]mon/i],
   ["Pop Culture", /movie|tv show|anime|cartoon|character|moment|villain|superhero|dragon|harry potter|star wars|simpsons|pixar|mcu|comedian|meme/i],
 ];
@@ -22,12 +25,10 @@ export const playLabel = (b) => (b.run && b.run.phase !== "done" ? "▶ Resume" 
 // what the hero shows, in order: the run you touched last, one random seasonal bracket, then the
 // most played ever / this month / this week / today. A bracket earns one slide only; any slot
 // that repeats one (or has no data yet) is filled at random from the rest.
-const SEASON = { 9: ["Halloween", SHELVES[0][1]], 10: ["Thanksgiving", /thanksgiving/i], 11: ["Christmas", /christmas|holiday/i] }; // month index -> kicker, titles
 export function heroSlides(brackets) {
   const pick = (list) => list[Math.floor(Math.random() * list.length)];
   const top = (key) => { const best = [...brackets].sort((x, y) => (y.plays?.[key] || 0) - (x.plays?.[key] || 0))[0]; return best && best.plays?.[key] > 0 ? best : null; };
   const started = brackets.filter((b) => b.run && b.run.phase !== "done").sort((x, y) => (y.run.updatedAt || 0) - (x.run.updatedAt || 0));
-  const season = SEASON[new Date().getMonth()];
   const seasonal = season ? brackets.filter((b) => season[1].test(b.title)) : [];
   const wanted = [
     ["Continue", started[0]],
