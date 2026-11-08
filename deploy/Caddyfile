@@ -20,7 +20,13 @@
 		}
 		reverse_proxy 127.0.0.1:3002
 	}
-	# nothing else lives on this site yet
+	# Dogpile (the kids brawler, A:\dogpile) is static files served straight from disk; its own
+	# deploy/push.sh fills /opt/dogpile. Same headers and compression as the brackets.
+	redir /dogpile /dogpile/ 308
+	handle_path /dogpile/* {
+		root * /opt/dogpile
+		file_server
+	}
 	handle {
 		redir * /brackets/ 302
 	}
