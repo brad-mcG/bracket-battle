@@ -27,8 +27,14 @@
 		root * /opt/dogpile
 		file_server
 	}
+	# The hub (A:\home): one static page at the root with a card per game. /home is an alias,
+	# and any path nothing else claims shows the hub instead of a 404.
+	redir /home /  308
+	redir /home/ / 308
 	handle {
-		redir * /brackets/ 302
+		root * /opt/home
+		try_files {path} /index.html
+		file_server
 	}
 }
 
