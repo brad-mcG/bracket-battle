@@ -24,6 +24,8 @@
 	# deploy/push.sh fills /opt/dogpile. Same headers and compression as the brackets.
 	redir /dogpile /dogpile/ 308
 	handle_path /dogpile/* {
+		reverse_proxy /ws 127.0.0.1:3003   # the co-op room (dogpile.service); WebSocket upgrades pass through
+		header Cache-Control "no-cache"    # revalidate every visit: a day-old cached main.js once ran against a new server
 		root * /opt/dogpile
 		file_server
 	}
