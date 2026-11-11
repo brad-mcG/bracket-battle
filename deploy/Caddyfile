@@ -29,10 +29,10 @@
 		root * /opt/dogpile
 		file_server
 	}
-	# The arcade (A:\arcade): fourteen minigames on ONE page and ONE room server (arcade.service on
+	# The arcade (A:\arcade): fifteen minigames on ONE page and ONE room server (arcade.service on
 	# 127.0.0.1:3004). /arcade/ holds the files and the WebSocket; each game's own path serves the
 	# same page, which reads the game from the address. Its deploy/push.sh fills /opt/arcade.
-	@arcadeGames path /lifeboat /lifeboat/ /dibs /dibs/ /catch /catch/ /pyramid /pyramid/ /fieldtrip /fieldtrip/ /casket /casket/ /toothfairy /toothfairy/ /lastride /lastride/ /codeblue /codeblue/ /reveal /reveal/ /texting /texting/ /potluck /potluck/ /seance /seance/ /furseason /furseason/
+	@arcadeGames path /lifeboat /lifeboat/ /dibs /dibs/ /catch /catch/ /pyramid /pyramid/ /fieldtrip /fieldtrip/ /casket /casket/ /toothfairy /toothfairy/ /lastride /lastride/ /codeblue /codeblue/ /reveal /reveal/ /texting /texting/ /potluck /potluck/ /seance /seance/ /furseason /furseason/ /smalltalk /smalltalk/
 	handle @arcadeGames {
 		header Cache-Control "no-cache"
 		root * /opt/arcade/web
